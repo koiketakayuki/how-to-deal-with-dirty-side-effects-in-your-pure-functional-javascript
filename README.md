@@ -85,7 +85,7 @@ logSomething(d, cnsl, "Off with their heads!");
 //  ￩ "Off with their heads!"
 ```
 
-今この関数は(`undefined を返す以外`)何もしません。
+今この関数は(`undefined`を返す以外)何もしません。
 しかし、この関数は完全に純粋です。
 同じ引数で呼び出せば、毎回同じ結果を返します。
 このことはとても重要です。
@@ -108,3 +108,23 @@ const username = getUserNameFromDOM();
 username;
 // ￩ "mhatter"
 ```
+
+この例では、DOMに情報を求めています。
+`document`はグローバルオブジェクトでいつでも変わる可能性があるため、このコードは純粋ではありません。
+一つの解決策は`document`を引数として渡すことですが、今回の例では以下のように
+`querySelector()`関数を引数として渡すことが可能です。
+
+```js
+// getUserNameFromDOM :: (String -> Element) -> String
+function getUserNameFromDOM($) {
+    return $('#username').value;
+}
+
+// qs :: String -> Element
+const qs = document.querySelector.bind(document);
+
+const username = getUserNameFromDOM(qs);
+username;
+// ￩ "mhatter"
+```
+
