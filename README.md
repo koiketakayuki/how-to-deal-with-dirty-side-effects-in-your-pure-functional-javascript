@@ -183,4 +183,160 @@ app(document, console, fetch, store, config, ga, (new Date()), Math.random);
 もう一つの方法があります。
 
 ## 遅延関数
+関数型プログラマーが使う、もう一つの抜け道を見てみましょう。
+その考え方は「実際に副作用が起きるまで、それは副作用ではない」というものです。
+よく分からないので、掘り下げてみましょう。
+次のコードを見てください。
+
+```js
+// fZero :: () -> Number
+function fZero() {
+    console.log('Launching nuclear missiles');
+    // Code to launch nuclear missiles goes here
+    return 0;
+}
+```
+
+馬鹿げたコードです。
+0が欲しいなら、直接そう書けばいいからです。
+また、読者がJavaScriptで核兵器をコントロールするプログラムを書いている訳ではないことは知っています。
+でも、ポイントを説明するのには役立ちます。
+上の関数は明確に純粋な関数ではありません。
+まずコンソールにメッセージを書き出して、それから核戦争を始めるのかもしれません。
+その後で0を返します。
+ミサイルを撃った後に、何か計算したいのだと想像してください。
+このようなシナリオでは事前にどのように計算をするかの予定を立てるのは非常に合理的なことです。
+ミサイルがどのタイミングで発射されるかには気を付けるべきです。
+計算の途中で間違ってミサイルを撃ってしまうことがないようにしなければなりません。
+なので`fZero()`を返すだけのラッパーを作ってみてはどうでしょう。
+安全のためのラッパーのようなものです。
+
+
+```js
+// fZero :: () -> Number
+function fZero() {
+    console.log('Launching nuclear missiles');
+    // Code to launch nuclear missiles goes here
+    return 0;
+}
+
+// returnZeroFunc :: () -> (() -> Number)
+function returnZeroFunc() {
+    return fZero;
+}
+```
+
+その返り値が実行されない限り、何回でも`returnZeroFunc()`を呼ぶことができます。
+このコードは(理論的には)安全です。ミサイルが発射さえることはありません。
+
+```js
+const zeroFunc1 = returnZeroFunc();
+const zeroFunc2 = returnZeroFunc();
+const zeroFunc3 = returnZeroFunc();
+// No nuclear missiles launched.
+```
+
+純粋な関数をもう少し形式的に定義してみましょう。
+その後で、`returnZeroFunc()`を議論します。
+
+純粋な関数である、とは
+
+1. 観察可能な副作用がない。
+2. 参照透過性がある。すなわち、同じ引数を入力した時にはいつでも同じ結果が出力される。
+
+`returnZeroFunc()`の場合を見てみましょう。
+
+`returnZeroFunc()`は副作用があるでしょうか。
+先ほど確認したように`returnZeroFunc()`の呼び出しは
+ミサイルを発射しません。その返り値を実行しない限りは何も起きません。
+したがってここでは副作用はありません。
+
+それでは`returnZeroFunc()`は参照透過でしょうか。
+つまり、いつも同じ値を返すでしょうか。
+次のコードでテストできます。
+
+```js
+zeroFunc1 === zeroFunc2; // true
+zeroFunc2 === zeroFunc3; // true
+```
+
+しかし、まだ純粋な関数とは言えません。
+`returnZeroFunc()`はそのスコープの外の値を参照しているからです。
+この問題は次のように書けば避けられます。
+
+```js
+// returnZeroFunc :: () -> (() -> Number)
+function returnZeroFunc() {
+    function fZero() {
+        console.log('Launching nuclear missiles');
+        // Code to launch nuclear missiles goes here
+        return 0;
+    }
+    return fZero;
+}
+```
+
+この関数は純粋な関数ですが、JavaScriptは私たちの期待と少し違う動き方をします。
+参照透過性を確認するために`===`演算子を使うことはできません。
+これは`returnZeroFunc()`が実行する度に違う関数を作るからです。
+しかし、コードを見れば参照透過だということを確認できます。
+
+`returnZeroFunc()`は毎回同じ関数を返すということ以外していません。
+それらの関数は参照されているメモリこそ違うものの、本質的には同じものです。
+
+これらは小さく、きれいな抜け道です。
+でも実際のコードでこのようなテクニックが使えるのでしょうか。
+答えは「Yes」です。
+でも、実際のコードでどのようにするかを見る前にもう少し上のコードを掘り下げてみましょう。
+危険な`fZero()`に戻ってみましょう。
+
+```js
+// fZero :: () -> Number
+function fZero() {
+    console.log('Launching nuclear missiles');
+    // Code to launch nuclear missiles goes here
+    return 0;
+}
+```
+
+試しに`fZero()`が返す0をミサイルを発射するせずに使ってみましょう。
+`fZero()`が最終的に返す0に対して、1を足して返す関数を作ります。
+
+```js
+// fIncrement :: (() -> Number) -> Number
+function fIncrement(f) {
+    return f() + 1;
+}
+
+fIncrement(fZero);
+// ⦘ Launching nuclear missiles
+// ￩ 1
+```
+
+おっと。核戦争を始まってしまいました。
+もう一度やってみましょう。
+でも今度は数字を返す関数ではなくて、最終的には数字を返す関数を返り値とする関数として
+`fIncrement()`を定義します。
+
+
+```js
+// fIncrement :: (() -> Number) -> (() -> Number)
+function fIncrement(f) {
+    return () => f() + 1;
+}
+
+fIncrement(zero);
+// ￩ [Function]
+```
+
+ふぅ。核戦争の危機を免れました。
+このまま進めてみましょう。
+この二つの関数があれば、すべての「将来の最終的な値」を表すことが可能です。
+
+```js
+const fOne   = fIncrement(zero);
+const fTwo   = fIncrement(one);
+const fThree = fIncrement(two);
+// And so on…
+```
 
