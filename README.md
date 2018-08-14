@@ -19,7 +19,37 @@
 簡単に言うと、数学者と同じことをします。騙すのです。
 騙す、と言った時に実際にはルールには従います。
 ですが、ルールの抜け道を見つけ、それを広げて象の群れを扱えるようにするのです。
-騙す方法は２つあります。
+騙す方法はニつあります。
 
 1. Dependency Injectionを使う: 柵の向こう側に問題を切り分ける
 2. Effect Functorを使う: 思いっきり遅延させる
+
+## Dependency Injection
+
+Dependency Injectionは副作用を扱う一つ目の方法です。
+この方法では、関数の純粋でない部分を抜き出して、関数の引数に突っ込んでしまいます。
+そして副作用を行うかどうかは他の関数の責任だ、と匙を投げるのです。
+コードを見てみましょう。
+
+```js
+// logSomething :: String -> String
+function logSomething(something) {
+    const dt = (new Date()).toIsoString();
+    console.log(`${dt}: ${something}`);
+    return something;
+}
+```
+
+この`logSomething()`関数には二つの純粋でない部分があります。
+Dateオブジェクトを使うことと、コンソールに書き出すことです。
+この関数は副作用を引き起こすだけでなく、毎ミリ秒ごとに違った結果を返すのです。
+どうやってこの関数を純粋な関数にするのでしょうか。
+純粋でない部分を抜き出して、関数の引数に突っ込みましょう。
+
+```js
+// logSomething: Date -> Console -> String -> *
+function logSomething(d, cnsl, something) {
+    const dt = d.toIsoString();
+    return cnsl.log(`${dt}: ${something}`);
+}
+```
