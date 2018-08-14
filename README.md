@@ -140,9 +140,18 @@ username;
 純粋でないバージョンの場合、テストのために`document`オブジェクトが必要です。
 その上、その`document`が内部に`username`というIDを持つ要素が存在しなければなりません。
 ブラウザの外でテストしたい時には、ただ一つの小さな機能のテストのためであってもjsdom やヘッドレスブラウザといったものが必要になってしまいます。
-しかし純粋なバージョンの場合、この問題は避けることが可能です。
+しかし純粋なバージョンの場合、この問題は避けられます。
+
 ```js
 const qsStub = () => ({value: 'mhatter'});
 const username = getUserNameFromDOM(qsStub);
 assert.strictEqual('mhatter', username, `Expected username to be ${username}`);
 ```
+
+実際のブラウザやjsdom での統合テストをしなくて良い、と言っているのではありません。
+この例が示しているのは、`getUserNameFromDOM()`の挙動が完全に予測できるということです。
+`qsStub`を渡すと、いつでも`mhatter`を返します。
+予測不可能な部分をより小さな`qs`に移動したのです。
+
+望むならこの予測不可能な部分をどんどんと上に押しやることができます。
+これを続けていくと、最終的にはアプリケーションのエントリーポイントに到達します。
