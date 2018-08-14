@@ -388,3 +388,129 @@ const fNine = fSqrt(fTwentySeven);
 このような関数が我々の「遅延された値」に対して適応できたら素晴らしいのではないでしょうか。
 どうしたらよいのでしょう。Effect Functor の世界へようこそ。
 
+## Effect Functor
+
+Effect Functor は関数による遅延そのものです。
+なので、先ほど議論していた`fZero()`をEffect オブジェクトによる実装を見ていきます。
+その前に、一度おさらいしておきましょう。
+
+```js
+// zero :: () -> Number
+function fZero() {
+    console.log('Starting with nothing');
+    // Definitely not launching a nuclear strike here.
+    // But this function is still impure.
+    return 0;
+}
+```
+
+Effect オブジェクトを作るコンストラクタを定義します。
+
+```js
+// Effect :: Function -> Effect
+function Effect(f) {
+    return {};
+}
+```
+
+このコードはそんなに見ないでください。
+もう少しちゃんと作りこみます。
+`fZero()`関数をEffect オブジェクトと使いたいのですがどうすればよいでしょうか。
+「普通の」関数を受け取って、最終的には遅延された値に適用したいのです。
+実際に副作用を起こさず、遅延されたままの状態でこれを行いたいのです。
+この操作を`map`と呼びます。
+この理由としては「普通」の関数を「遅延された値にも適用可能な」関数にmapするからです。
+実装すると下のようになります。
+
+```js
+// Effect :: Function -> Effect
+function Effect(f) {
+    return {
+        map(g) {
+            return Effect(x => g(f(x)));
+        }
+    }
+}
+```
+
+注意深く見ると疑問に思ううかもしれませんが、このコードは関数合成にそっくりです。
+この点は後ほど見ていきます。
+とりあえず今は動作を試してみましょう。
+
+
+```js
+const zero = Effect(fZero);
+const increment = x => x + 1; // A plain ol' regular function.
+const one = zero.map(increment);
+```
+
+うーん。副作用が遅延されているので、実際に何が起こっているかを見る方法がありませんね。
+Effect オブジェクトを修正して遅延されたものの「トリガーを引ける」ようにしましょう。
+
+```js
+// Effect :: Function -> Effect
+function Effect(f) {
+    return {
+        map(g) {
+            return Effect(x => g(f(x)));
+        },
+        runEffects(x) {
+            return f(x);
+        }
+    }
+}
+
+const zero = Effect(fZero);
+const increment = x => x + 1; // Just a regular function.
+const one = zero.map(increment);
+
+one.runEffects();
+// ⦘ Starting with nothing
+// ￩ 1
+```
+
+お望みとあらば`map`を繫ぎ続けることもできます。
+
+```js
+const double = x => x * 2;
+const cube = x => Math.pow(x, 3);
+const eight = Effect(fZero)
+    .map(increment)
+    .map(double)
+    .map(cube);
+
+eight.runEffects();
+// ⦘ Starting with nothing
+// ￩ 8
+```
+
+ここからが面白いところです。
+私たちは上のようなオブジェクトを「Functor」と呼びます。
+Functorと言った時には、それが`map`という演算を持ち、いくつかのルールに従うということを表します。
+このルールはできないことのルールではなく、何ができるかのルールです。
+ルールというよりも、特権です。
+Effect はFunctor なのでいくつかやれることがあります。
+この内の一つは「合成」です。
+それは次のようなルールです。
+
+```
+eがFunctorで,関数f, gがあるなら
+e.map(g).map(f) は e.map(x => f(g(x))) と等しい 
+```
+
+言い換えると、二つmapが並んでいた場合は
+関数合成したものをmapした場合に等しい、ということです。
+つまり、Effect は次のような操作ができるのです。
+
+```js
+const incDoubleCube = x => cube(double(increment(x)));
+// If we're using a library like Ramda or lodash/fp we could also write:
+// const incDoubleCube = compose(cube, double, increment);
+const eight = Effect(fZero).map(incDoubleCube);
+```
+
+この結果は`map()`を三つ並べた時と同じになることが保証されています。
+つまりリファクタする際に、振る舞いを変えずにコードを変えられます。
+これはパフォーマンスを改善する際などに有効かもしれません。
+数字の例では別にどちらでも大差ありません。
+より現実に近いコードを見ていきましょう。
