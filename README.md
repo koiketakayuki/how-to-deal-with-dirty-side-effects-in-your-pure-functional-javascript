@@ -299,7 +299,7 @@ function fZero() {
 }
 ```
 
-試しに`fZero()`が返す0をミサイルを発射するせずに使ってみましょう。
+試しに`fZero()`が返す0をミサイルを発射せずに使ってみましょう。
 `fZero()`が最終的に返す0に対して、1を足して返す関数を作ります。
 
 ```js
@@ -339,4 +339,40 @@ const fTwo   = fIncrement(one);
 const fThree = fIncrement(two);
 // And so on…
 ```
+
+また、「将来の最終的な値」を操作する演算を定義できます。
+
+```js
+// fMultiply :: (() -> Number) -> (() -> Number) -> (() -> Number)
+function fMultiply(a, b) {
+    return () => a() * b();
+}
+
+// fPow :: (() -> Number) -> (() -> Number) -> (() -> Number)
+function fPow(a, b) {
+    return () => Math.pow(a(), b());
+}
+
+// fSqrt :: (() -> Number) -> (() -> Number)
+function fSqrt(x) {
+    return () => Math.sqrt(x());
+}
+
+const fFour = fPow(fTwo, fTwo);
+const fEight = fMultiply(fFour, fTwo);
+const fTwentySeven = fPow(fThree, fThree);
+const fNine = fSqrt(fTwentySeven);
+// No console log or thermonuclear war. Jolly good show!
+```
+
+ここで何をしたか分かりましたか？
+普通の数で行っていることを、「将来の最終的な値」でも行っているのです。
+数学者はこれを「同型」と呼んでいます。
+すべての普通の数は、関数と組み合わせることで「将来の最終的な値」に変換できます。
+
+「将来の最終的な値」は関数を実行することで取り出せます。
+つまり、普通の数と「将来の最終的な値」との間に完全な1対1対応があるということです。
+これは思っているよりも、かなりわくわくさせる概念です。約束します。
+すぐ後にこの概念に戻ってきます。
+
 
