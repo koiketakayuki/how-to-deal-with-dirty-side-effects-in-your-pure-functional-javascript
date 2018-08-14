@@ -128,3 +128,21 @@ username;
 // ￩ "mhatter"
 ```
 
+あなたはまた文句を言うかもしれません。
+今やったことと言えば、`getUsernameFromDOM()`から純粋でない部分を外に出しただけです。
+それはなくなっていません。ただ`qs()`という別の関数に張り付けただけなのです。
+一つの純粋でない関数を、一つの純粋な関数と一つの純粋でない関数の二つに分離したのですから、
+コードを長くしただけにも思えます。
+
+もう少し我慢してください。
+`getUserNameFromDOM()`のテストをすることを考えてみましょう。
+純粋なバージョンとそうでないバージョン、どちらが簡単でしょう。
+純粋でないバージョンの場合、テストのために`document`オブジェクトが必要です。
+その上、その`document`が内部に`username`というIDを持つ要素が存在しなければなりません。
+ブラウザの外でテストしたい時には、ただ一つの小さな機能のテストのためであってもjsdom やヘッドレスブラウザといったものが必要になってしまいます。
+しかし純粋なバージョンの場合、この問題は避けることが可能です。
+```js
+const qsStub = () => ({value: 'mhatter'});
+const username = getUserNameFromDOM(qsStub);
+assert.strictEqual('mhatter', username, `Expected username to be ${username}`);
+```
