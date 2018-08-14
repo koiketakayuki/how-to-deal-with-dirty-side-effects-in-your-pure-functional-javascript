@@ -53,3 +53,34 @@ function logSomething(d, cnsl, something) {
     return cnsl.log(`${dt}: ${something}`);
 }
 ```
+
+これを使うときは、自分で明示的に純粋ではないパーツを引数として渡す必要があります。
+
+
+```
+const something = "Curiouser and curiouser!"
+const d = new Date();
+logSomething(d, console, something);
+// ⦘ Curiouser and curiouser!
+```js
+
+「一つ上のレイヤーに問題を棚上げしているだけで、前と同じだ。純粋じゃあない。」とあなたは思うかもしれません。
+それは正しい考え方です。Dependency Injection はルールの抜け道です。知らない振りをしているだけなのです。
+「ああ、すいません。`cnsl`オブジェクトの`log()`がIOを発生させるかどうかは知らないのです。誰かがそれをくれたのです。どこから来たのかも分かりません。」
+これは少し怠惰のようにも思える。
+
+でもこれは見かけよりも馬鹿なことではないのです。
+`logSomething()`関数を見てみましょう。
+もしこの関数を純粋ではない関数にしたいなら、あなたが関数の引数を使ってそれを設定しないといけないのです。
+純粋な引数を渡せば、簡単に純粋な関数にすることができます。
+
+```js
+const d = {toISOString: () => '1865-11-26T16:00:00.000Z'};
+const cnsl = {
+    log: () => {
+        // do nothing
+    },
+};
+logSomething(d, cnsl, "Off with their heads!");
+//  ￩ "Off with their heads!"
+```
