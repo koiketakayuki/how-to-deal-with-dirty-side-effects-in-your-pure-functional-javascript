@@ -57,12 +57,12 @@ function logSomething(d, cnsl, something) {
 これを使うときは、自分で明示的に純粋ではないパーツを引数として渡す必要があります。
 
 
-```
+```js
 const something = "Curiouser and curiouser!"
 const d = new Date();
 logSomething(d, console, something);
 // ⦘ Curiouser and curiouser!
-```js
+```
 
 「一つ上のレイヤーに問題を棚上げしているだけで、前と同じだ。純粋じゃあない。」とあなたは思うかもしれません。
 それは正しい考え方です。Dependency Injection はルールの抜け道です。知らない振りをしているだけなのです。
