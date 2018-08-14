@@ -531,3 +531,29 @@ Effect.of = function of(val) {
 }
 ```
 
+これが便利かどうか調べるためにWebアプリを作っていることを考えましょう。
+このアプリは記事一覧やプロフィールといった基本的な機能を持っています。
+ユーザーが変わった際にコンテンツを動的に変更するにはどうしたらよいでしょう。
+私たちは賢いエンジニアなので、下のように設定ファイルをグローバルに置くことにしました。
+
+```js
+window.myAppConf = {
+    selectors: {
+        'user-bio':     '.userbio',
+        'article-list': '#articles',
+        'user-name':    '.userfullname',
+    },
+    templates: {
+        'greet':  'Pleased to meet you, {name}',
+        'notify': 'You have {n} alerts',
+    }
+};
+```
+
+`Effect.of()` を使えば、これらの設定の値をEffect の中に突っ込むことができます。
+
+```js
+const win = Effect.of(window);
+userBioLocator = win.map(x => x.myAppConf.selectors['user-bio']);
+// ￩ Effect('.userbio')
+```
