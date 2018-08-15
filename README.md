@@ -557,3 +557,26 @@ const win = Effect.of(window);
 userBioLocator = win.map(x => x.myAppConf.selectors['user-bio']);
 // ￩ Effect('.userbio')
 ```
+
+### Effectの入れ子と取り出し
+
+Effectを関数でマッピングした際には
+その関数がまたEffectを返すような時もあります。
+
+すでに`getElementLocator()`は定義しました。
+文字列を遅延したEffect です。
+もし実際にDOMを見つけたい時は、別の純粋でない関数である`document.querySelector()`を呼ばなければなりません。
+これをEffect化しましょう。
+
+```js
+// $ :: String -> Effect DOMElement
+function $(selector) {
+    return Effect.of(document.querySelector(s));
+}
+```
+二つを組み合わせると下のようになります。
+
+```js
+const userBio = userBioLocator.map($);
+// ￩ Effect(Effect(<div>))
+```
