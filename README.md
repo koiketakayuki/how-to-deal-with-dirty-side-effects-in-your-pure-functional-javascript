@@ -580,3 +580,29 @@ function $(selector) {
 const userBio = userBioLocator.map($);
 // ￩ Effect(Effect(<div>))
 ```
+
+こいつは少し扱いずらいオブジェクトです。
+中のdivにアクセスするためにはマッピングする関数の内部で
+もう一度マップピングする必要があります。
+
+```js
+const innerHTML = userBio.map(eff => eff.map(domEl => domEl.innerHTML));
+// ￩ Effect(Effect('<h2>User Biography</h2>'))
+```
+
+少しなんとかしてみましょう。
+一度`userBio`まで戻ります。
+退屈かもしれませんが、何が起こっているのかをしっかり説明したいのです。
+`Effect('user-bio')`という記法は誤解を招きます。
+より正確に書くなら次のようになります。
+
+```js
+Effect(() => '.userbio');
+```
+
+これも完全に正確ではありません。
+さらに正確に書くと
+
+```js
+Effect(() => window.myAppConf.selectors['user-bio']);
+```
