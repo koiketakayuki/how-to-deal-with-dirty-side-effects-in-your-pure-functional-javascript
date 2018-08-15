@@ -313,7 +313,7 @@ fIncrement(fZero);
 // ￩ 1
 ```
 
-おっと。核戦争を始まってしまいました。
+おっと。核戦争が始まってしまいました。
 もう一度やってみましょう。
 でも今度は数字を返す関数ではなくて、最終的には数字を返す関数を返り値とする関数として
 `fIncrement()`を定義します。
@@ -634,4 +634,43 @@ Effect(
 
 実際に副作用を働かせているのは内側のコードだけで
 外側にそのコードが漏れ出ていないことが分かると思います。
+
+### Join
+
+入れ子のEffectをタイピングするのは面倒くさいことです。
+Effectの入れ子は解消したいのですが、その過程で副作用が発生しないようにしなければなりません。
+Effectの場合にこれを実現するために、外側のEffectが`runEffect()`関数を実行すればよいのですが
+これは少し良くないやり方です。
+目的が副作用を発生させることではないからです。
+なので、`runEffect()`と同じことをする`join()`を実装します。
+入れ子のEffectを解消する際には、`join()`、副作用をトリガーする際には`reunEffect()`と使い分けるようにします。
+
+```js
+// Effect :: Function -> Effect
+function Effect(f) {
+    return {
+        map(g) {
+            return Effect(x => g(f(x)));
+        },
+        runEffects(x) {
+            return f(x);
+        }
+        join(x) {
+            return f(x);
+        }
+    }
+}
+```
+
+ユーザープロフィールの要素取得の例は次のように簡略化されます。
+
+```js
+const userBioHTML = Effect.of(window)
+    .map(x => x.myAppConf.selectors['user-bio'])
+    .map($)
+    .join()
+    .map(x => x.innerHTML);
+// ￩ Effect('<h2>User Biography</h2>')
+```
+
 
