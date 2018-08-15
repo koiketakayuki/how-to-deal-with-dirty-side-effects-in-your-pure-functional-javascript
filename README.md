@@ -606,3 +606,32 @@ Effect(() => '.userbio');
 ```js
 Effect(() => window.myAppConf.selectors['user-bio']);
 ```
+
+これを`$`を使ってマッピングします。
+マッピングは関数合成と同じなので、次のようになります。
+
+```js
+Effect(() => $(window.myAppConf.selectors['user-bio']));
+```
+
+これは次のコードと同義です。
+
+```js
+Effect(
+    () => Effect.of(document.querySelector(window.myAppConf.selectors['user-bio'])))
+);
+```
+
+さらに次のように変形できます。
+
+```js
+Effect(
+    () => Effect(
+        () => document.querySelector(window.myAppConf.selectors['user-bio'])
+    )
+);
+```
+
+実際に副作用を働かせているのは内側のコードだけで
+外側にそのコードが漏れ出ていないことが分かると思います。
+
