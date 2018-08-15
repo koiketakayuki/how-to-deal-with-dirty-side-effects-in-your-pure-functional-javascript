@@ -643,7 +643,7 @@ Effectの場合にこれを実現するために、外側のEffectが`runEffect(
 これは少し良くないやり方です。
 目的が副作用を発生させることではないからです。
 なので、`runEffect()`と同じことをする`join()`を実装します。
-入れ子のEffectを解消する際には、`join()`、副作用をトリガーする際には`reunEffect()`と使い分けるようにします。
+入れ子のEffectを解消する際には`join()`、副作用をトリガーする際には`reunEffect()`と使い分けるようにします。
 
 ```js
 // Effect :: Function -> Effect
@@ -673,4 +673,40 @@ const userBioHTML = Effect.of(window)
 // ￩ Effect('<h2>User Biography</h2>')
 ```
 
+### Chain
+`map()`の後に`join()`が続くというのは良くみられるパターンです。
+実際にかなり多いので、ショートカットを定義するのは大変便利です。
+ショートカットとして`map()`してから`join()`をする`chain()`を定義します。
+Effectを返す関数でEffectをマッピングする時には、この`chain()`を用います。
+コードは次にようになります。
 
+```js
+// Effect :: Function -> Effect
+function Effect(f) {
+    return {
+        map(g) {
+            return Effect(x => g(f(x)));
+        },
+        runEffects(x) {
+            return f(x);
+        }
+        join(x) {
+            return f(x);
+        }
+        chain(g) {
+            return Effect(f).map(g).join();
+        }
+    }
+}
+```
+
+これを使えば二つのEffectを「チェイン」することができます。
+HTML要素取得の例は次のように簡略化されます。
+
+```js
+const userBioHTML = Effect.of(window)
+    .map(x => x.myAppConf.selectors['user-bio'])
+    .chain($)
+    .map(x => x.innerHTML);
+// ￩ Effect('<h2>User Biography</h2>')
+```
