@@ -710,3 +710,8 @@ const userBioHTML = Effect.of(window)
     .map(x => x.innerHTML);
 // ￩ Effect('<h2>User Biography</h2>')
 ```
+
+残念なことに、この`chain`という操作はプログラミング言語ごとに違う名前を持っていたりします。
+`flatMap`はその一つです。これはmapしてから構造を平らにしているので妥当な名前と言えます。
+Haskellでは`bind`という名前がついています。`chain`、`flatMap`、`bind`これらは同じものです。
+
